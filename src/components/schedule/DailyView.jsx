@@ -8,10 +8,12 @@ export default function DailyView({ filter }) {
 
   const dailyItems = useMemo(() => {
     let base = state.scheduledClasses.filter((item) => item.date === state.selectedDate);
+    const dayLabel = getDayLabel(state.selectedDate);
     if (!base.length) {
-      const dayLabel = getDayLabel(state.selectedDate);
       base = state.weeklyClasses[dayLabel] || [];
     }
+
+    base = base.map(item => ({ ...item, renderDate: state.selectedDate, renderDay: dayLabel }));
 
     // Apply filters
     return base.filter(cls => {

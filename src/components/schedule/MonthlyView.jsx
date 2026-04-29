@@ -58,12 +58,14 @@ export default function MonthlyView({ filter }) {
     calendarData.forEach(day => {
       if (!day.isOutside && !map[day.key]) {
         const dayLabel = getDayLabel(day.key);
-        const weekly = (state.weeklyClasses[dayLabel] || []).filter(cls => {
+        let weekly = (state.weeklyClasses[dayLabel] || []).filter(cls => {
           const matchesSchool = !filter.schoolId || cls.schoolId === filter.schoolId;
           const matchesType = !filter.type || cls.type === filter.type;
           return matchesSchool && matchesType;
         });
-        if (weekly.length) map[day.key] = weekly;
+        if (weekly.length) {
+          map[day.key] = weekly.map(w => ({ ...w, renderDate: day.key, renderDay: dayLabel }));
+        }
       }
     });
 
