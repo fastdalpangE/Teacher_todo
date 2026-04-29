@@ -177,7 +177,7 @@ function SectionRenderer({ sec, isOpen, onToggle, todos, transfers, allDdays, st
   if (sec.type === 'todo') return <TodoSection sec={sec} isOpen={isOpen} onToggle={onToggle} items={todos} dispatch={dispatch} />;
   if (sec.type === 'transfer') return <TransferSection sec={sec} isOpen={isOpen} onToggle={onToggle} items={transfers} dispatch={dispatch} />;
   if (sec.type === 'dday') return <DdaySection sec={sec} isOpen={isOpen} onToggle={onToggle} allDdays={allDdays} dispatch={dispatch} onOpenExamModal={onOpenExamModal} />;
-  if (sec.type === 'report') return <ReportSection sec={sec} isOpen={isOpen} onToggle={onToggle} students={students} />;
+  if (sec.type === 'report') return <ReportSection sec={sec} isOpen={isOpen} onToggle={onToggle} students={students} dispatch={dispatch} />;
   if (sec.type === 'memo') return <MemoSection sec={sec} isOpen={isOpen} onToggle={onToggle} dispatch={dispatch} />;
   return null;
 }
@@ -351,7 +351,32 @@ function DdaySection({ sec, isOpen, onToggle, allDdays, dispatch, onOpenExamModa
 // ═══════════════════════════════════════════════
 // REPORT SECTION
 // ═══════════════════════════════════════════════
-function ReportSection({ sec, isOpen, onToggle, students }) {
+function ReportSection({ sec, isOpen, onToggle, students, dispatch }) {
+  const [search, setSearch] = useState('');
+
+  const filtered = students.filter(s =>
+    !search || s.name.includes(search) || s.grade.includes(search) || (s.schoolName || '').includes(search)
+  );
+
+  // Group by grade
+  const grouped = {};
+  filtered.forEach(s => {
+    const key = s.grade || '미지정';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(s);
+  });
+
+  // Sort grade keys
+  const gradeOrder = Object.keys(grouped).sort((a, b) => {
+    const order = (g) => {
+      if (g.startsWith('초')) return 10 + parseInt(g.replace(/\D/g, '') || '0');
+      if (g.startsWith('중')) return 20 + parseInt(g.replace(/\D/g, '') || '0');
+      if (g.startsWith('고')) return 30 + parseInt(g.replace(/\D/g, '') || '0');
+      return 99;
+    };
+    return order(a) - order(b);
+  });
+
   return (
     <div className={`todo-section ${isOpen ? 'open' : ''}`}>
       <div className="todo-sec-header" onClick={onToggle}>
@@ -362,18 +387,49 @@ function ReportSection({ sec, isOpen, onToggle, students }) {
       </div>
       {isOpen && (
         <div className="todo-sec-body">
-          <div className="report-desc">학생을 눌러 프로필/코멘트를 확인하세요</div>
-          <div className="report-chips">
-            {students.map(s => (
-              <span className="report-chip" key={s.id}>
-                <span className="report-chip-avatar" style={{ background: avatarColor(s.name) }}>
-                  {s.name[0]}
-                </span>
-                {s.name}
-                <span className="report-chip-grade">{s.grade}</span>
-              </span>
-            ))}
+          <div className="report-toolbar">
+            <span className="report-desc">학생을 눌러 프로필/코멘트를 확인하세요</span>
+            <div className="report-search">
+              <span className="report-search-icon">🔍</span>
+              <input
+                className="report-search-input"
+                placeholder="학생 검색..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button className="report-search-clear" onClick={() => setSearch('')}>×</button>
+              )}
+            </div>
           </div>
+
+          {gradeOrder.length === 0 ? (
+            <div className="todo-empty">검색 결과가 없습니다</div>
+          ) : (
+            gradeOrder.map(grade => (
+              <div className="report-grade-group" key={grade}>
+                <div className="report-grade-label">
+                  <span className="report-grade-text">{grade}</span>
+                  <span className="report-grade-count">{grouped[grade].length}명</span>
+                </div>
+                <div className="report-chips">
+                  {grouped[grade].map(s => (
+                    <span
+                      className="report-chip clickable"
+                      key={s.id}
+                      onClick={() => dispatch({ type: 'OPEN_STUDENT_PROFILE', payload: s.id })}
+                    >
+                      <span className="report-chip-avatar" style={{ background: avatarColor(s.name) }}>
+                        {s.name[0]}
+                      </span>
+                      {s.name}
+                      <span className="report-chip-school">{s.schoolName || ''}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>

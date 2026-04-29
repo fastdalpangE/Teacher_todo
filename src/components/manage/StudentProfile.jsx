@@ -60,8 +60,22 @@ export default function StudentProfile({ studentId }) {
   // Vocab test history
   const vocabHistory = student.vocabTestHistory || [];
 
-  // Comments
-  const comments = student.teacherComments || [];
+  // Comments (Global + Class-specific)
+  const comments = useMemo(() => {
+    const globalComments = (student.teacherComments || []).map((c, i) => ({
+      ...c,
+      isGlobal: true,
+      originalIndex: i
+    }));
+    const classComments = history
+      .filter(h => h.record.comment)
+      .map(h => ({
+        date: h.date,
+        text: `[${h.name}] ${h.record.comment}`,
+        isGlobal: false
+      }));
+    return [...globalComments, ...classComments].sort((a, b) => b.date.localeCompare(a.date));
+  }, [student.teacherComments, history]);
 
   const handleAddComment = () => {
     const text = commentInput.trim();
@@ -252,10 +266,14 @@ export default function StudentProfile({ studentId }) {
                     <div className="sp-comment-item" key={i}>
                       <div className="sp-c-header">
                         <span className="sp-c-date">{c.date}</span>
-                        <button className="sp-c-del" onClick={() => {
-                          dispatch({ type: 'DELETE_TEACHER_COMMENT', payload: { studentId, index: i } });
-                          showToast?.('코멘트가 삭제되었습니다');
-                        }}>×</button>
+                        {c.isGlobal ? (
+                          <button className="sp-c-del" onClick={() => {
+                            dispatch({ type: 'DELETE_TEACHER_COMMENT', payload: { studentId, index: c.originalIndex } });
+                            showToast?.('코멘트가 삭제되었습니다');
+                          }}>×</button>
+                        ) : (
+                          <span style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 700 }}>수업 연동</span>
+                        )}
                       </div>
                       <div className="sp-c-text">{c.text}</div>
                     </div>

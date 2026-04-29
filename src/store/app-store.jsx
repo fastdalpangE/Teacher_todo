@@ -122,23 +122,6 @@ function reducer(state, action) {
     }
 
     /* --- Record Management --- */
-    case 'UPDATE_STUDENT_RECORD': {
-      const { classId, studentId, field, value } = action.payload;
-      return {
-        ...state,
-        scheduledClasses: state.scheduledClasses.map((cls) => {
-          if (cls.id !== classId) return cls;
-          const updatedRecords = {
-            ...(cls.studentRecords || {}),
-            [studentId]: {
-              ...(cls.studentRecords?.[studentId] || { attendance: '', vocabScore: '', comment: '', hwStatus: '', attitude: '' }),
-              [field]: value
-            }
-          };
-          return { ...cls, studentRecords: updatedRecords };
-        })
-      };
-    }
 
     /* --- Add Teacher Comment --- */
     case 'ADD_TEACHER_COMMENT': {
@@ -247,7 +230,44 @@ function reducer(state, action) {
       };
     }
 
-    /* --- Todo CRUD --- */
+    case 'UPDATE_STUDENT_RECORD': {
+      const { classId, studentId, field, value, renderDate, renderDay } = action.payload;
+
+      let scheduledClasses = [...state.scheduledClasses];
+      let targetClass = scheduledClasses.find(c => c.id === classId);
+
+      // If editing a weekly class instance, instantiate all classes for that date first
+      if (!targetClass && renderDate && renderDay) {
+        const weeklyForDay = state.weeklyClasses[renderDay] || [];
+        const existingForDate = scheduledClasses.filter(c => c.date === renderDate);
+        
+        if (existingForDate.length === 0) {
+          const instanced = weeklyForDay.map(wc => ({
+            ...wc,
+            id: createId('sc'),
+            originalWeeklyId: wc.id,
+            date: renderDate,
+            studentRecords: {}
+          }));
+          scheduledClasses.push(...instanced);
+          targetClass = instanced.find(c => c.originalWeeklyId === classId);
+        }
+      }
+
+      if (!targetClass) return state;
+
+      return {
+        ...state,
+        scheduledClasses: scheduledClasses.map(c => {
+          if (c.id !== targetClass.id) return c;
+          const records = { ...c.studentRecords };
+          const rec = { ...(records[studentId] || { attendance: '', vocabScore: '', comment: '', hwStatus: '', attitude: '' }) };
+          rec[field] = value;
+          records[studentId] = rec;
+          return { ...c, studentRecords: records };
+        })
+      };
+    }
     case 'ADD_TODO':
       return { ...state, todos: [...state.todos, { id: createId('todo'), text: action.payload, done: false }] };
     case 'TOGGLE_TODO':
