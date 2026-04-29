@@ -184,8 +184,11 @@ export default function ClassCard({ classItem }) {
                       <input
                         type="text"
                         placeholder="개수"
-                        value={record.vocabScore}
-                        onChange={(e) => handleUpdateRecord(student.id, 'vocabScore', e.target.value)}
+                        value={record.vocabScore || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                          handleUpdateRecord(student.id, 'vocabScore', val);
+                        }}
                       />
                     </div>
 
