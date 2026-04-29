@@ -29,7 +29,14 @@ export default function ClassCard({ classItem }) {
   const handleUpdateRecord = (studentId, field, value) => {
     dispatch({
       type: 'UPDATE_STUDENT_RECORD',
-      payload: { classId: classItem.id, studentId, field, value }
+      payload: { 
+        classId: classItem.id, 
+        studentId, 
+        field, 
+        value,
+        renderDate: classItem.renderDate,
+        renderDay: classItem.renderDay
+      }
     });
   };
 
