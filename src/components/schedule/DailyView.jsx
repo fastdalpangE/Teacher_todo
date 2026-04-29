@@ -4,7 +4,7 @@ import { formatDisplayDate, getDayLabel } from '../../utils/date';
 import ClassCard from './ClassCard';
 
 export default function DailyView({ filter }) {
-  const { state } = useAppStore();
+  const { state, dispatch } = useAppStore();
 
   const dailyItems = useMemo(() => {
     let base = state.scheduledClasses.filter((item) => item.date === state.selectedDate);
@@ -36,7 +36,25 @@ export default function DailyView({ filter }) {
     <div className="daily-view-wrapper">
       <div className="daily-header glass">
         <div className="daily-title">
-          <h3>{formatDisplayDate(state.selectedDate)} ({getDayLabel(state.selectedDate)})</h3>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="date"
+              value={state.selectedDate}
+              onChange={(e) => dispatch({ type: 'SET_SELECTED_DATE', payload: e.target.value })}
+              style={{
+                background: 'var(--bg-glass)',
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                color: 'var(--text-main)',
+                fontSize: '1.2rem',
+                fontWeight: '700',
+                padding: '4px 8px',
+                fontFamily: 'inherit',
+                cursor: 'pointer'
+              }}
+            />
+            <span>({getDayLabel(state.selectedDate)})</span>
+          </h3>
           <p className="subtitle">필터링 된 수업 <strong>{dailyItems.length}</strong>건</p>
         </div>
       </div>
