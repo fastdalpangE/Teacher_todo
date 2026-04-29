@@ -206,6 +206,19 @@ export default function ClassCard({ classItem }) {
               );
             })}
           </div>
+          <div style={{ padding: '0 16px 16px' }}>
+            <button 
+              className="btn-primary" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(false);
+                showToast?.('수업 기록이 안전하게 저장되었습니다.');
+              }}
+              style={{ width: '100%', padding: '12px 0', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold' }}
+            >
+              ✅ 기록 완료
+            </button>
+          </div>
         </div>
       )}
     </article>
